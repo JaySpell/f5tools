@@ -4,7 +4,7 @@ import time
 
 class F5RESTCon(object):
 
-    def __init__(self, username, password, server, f5app):
+    def __init__(self, username, password, server, f5type):
         self.name = self
         self.server = server
         self.username = username
@@ -15,15 +15,15 @@ class F5RESTCon(object):
         self.idletimeout = 500
         self.abstimeout = 1200
         self.sessioncookie = ''
-        self.f5app = f5app
+        self.f5type = f5type
 
     def connect_session(self):
         if not self.active_connection():
-            if self.f5app[0].upper() == 'g':
+            if self.f5type[0].upper() == 'G':
                 f5_type = "gtm"
             else:
                 f5_type = "ltm"
-
+            print(f5_type)
             self.s = requests.Session()
             self.s.auth = (self.username, self.password)
             r = self.s.get('https://' + self.server +
