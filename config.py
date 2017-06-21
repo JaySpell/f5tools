@@ -9,9 +9,17 @@ def get_username():
     return cfg_params[0]['username']
 
 
-def get_password():
-    return cfg_params[0]['password']
+def get_ltm_password():
+    return cfg_params[0]['ltm_password']
 
 
-def get_server():
-    return cfg_params[0]['server']
+def get_ltm_server():
+    return cfg_params[0]['ltm_server']
+
+
+def get_gtm_server():
+    return cfg_params[0]['gtm_server']
+
+
+def get_gtm_password():
+    return cfg_params[0]['gtm_password']
