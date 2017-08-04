@@ -1,6 +1,6 @@
 import json
 
-config_file = '/home/jspell/f5_config.json'
+config_file = '/path_to_config.json'
 with open(config_file) as config:
     cfg_params = json.load(config)
 
