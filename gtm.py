@@ -138,7 +138,6 @@ class GTMUtils(F5):
         # Set new fallback ip
         n_ip = [ip for ip in m_ip if not ip.split(':')[0] == c_fb_ip]
 
-        print(n_ip, c_fb_ip)
         post = {'fallbackIpv4': n_ip[0].split(':')[0]}
         v = json.dumps(post)
         rev_req = self.session.put(f_uri, data=v, verify=False)
