@@ -61,6 +61,27 @@ class LTMUtils(F5):
     def get_active_f5(self, site):
         pass
 
+    def get_node_info(self, node):
+        # Set total uri
+        host_uri = "https://{}".format(self.server)  # host
+
+        # Determine connection state
+        if not self.f5con.active_connection():
+            self.f5_connect()
+
+        # Set request uri
+        request_uri = (
+            "https://{}/mgmt/tm/ltm/node/{}/".format(self.server,
+                                                     node))
+
+        # Send REST request and place response
+        resp = self.session.get(request_uri, verify=False)
+        if resp.status_code != 200:
+            print('GET {} returned {}'.format(resp.text, resp.status_code))
+
+        # Return response
+        return resp
+
     def set_irule_vip(self, vip, irule, remove_ir=False, s_irules=False):
         '''
         Will set the irule on a VIP
@@ -116,6 +137,35 @@ class LTMUtils(F5):
         except:
             e = sys.exc_info()[0]
             pp.pprint(e)
+
+    def create_f5_object(self, obj_type, obj_info):
+        '''
+        Will create F5 object
+        Depends:
+
+        :param obj_type:
+            Required - must be valid F5 object type
+
+        :param obj_info:
+            Required - should be dict with payload of F5 object
+
+        Returns none
+        '''
+
+        # If valid begin putting together REST POST
+        if obj_type in self.valid_objs:
+            f_uri = self.base_uri + obj_type
+            v = json.dumps(obj_info)
+            try:
+                self.f5_connect()
+                create = self.session.put(f_uri, data=v, verify=False)
+                print(O + "{}".format(create.status_code) + W)
+                print(O + "{}".format(create.json()) + W)
+            except:
+                e = sys.exc_info()[0]
+                print(R + "{}".format(e) + W)
+        else:
+            print(R + "{}".format("Invalid object type...") + W)
 
     def get_vip_fullname(self, vip):
         '''

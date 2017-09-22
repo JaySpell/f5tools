@@ -17,6 +17,7 @@ class F5(object):
         else:
             self.password = f5_config.get_ltm_password()
             self.server = f5_config.get_ltm_server(self.site)
+            self.valid_objs = f5_config.get_f5_ltm_obj()
 
     def f5_connect(self):
         self.f5con = F5RESTCon(self.username, self.password,
