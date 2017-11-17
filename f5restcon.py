@@ -1,5 +1,9 @@
 import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import time
+
+# Disable annoying warnings
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 class F5RESTCon(object):
@@ -23,7 +27,7 @@ class F5RESTCon(object):
                 f5_type = "gtm"
             else:
                 f5_type = "ltm"
-            print(f5_type)
+
             self.s = requests.Session()
             self.s.auth = (self.username, self.password)
             r = self.s.get('https://' + self.server +

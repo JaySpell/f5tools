@@ -1,7 +1,8 @@
 import json
 import sys
+sys.path.append('/home/jspell/Documents/dev/f5tools/')
 import pprint
-from f5 import F5
+from f5_custom import F5
 
 # Colors for output to console
 W = '\033[0m'  # white (normal)
@@ -55,11 +56,74 @@ class LTMUtils(F5):
         # Return response
         return resp
 
-    def get_pool_info(ltm_srv, pool_name):
-        pass
+    def get_all_vip(self):
+        '''
+        Will get the list of all VIP
+        Depends:
+            get_info_json - returns json of pool members
+
+        Returns all_vip
+        '''
+
+        # Set total uri
+        host_uri = "https://{}".format(self.server)  # host
+
+        # Determine connection state
+        if not self.f5con.active_connection():
+            self.f5_connect()
+
+        # Set request uri
+        request_uri = (
+            "https://{}/mgmt/tm/ltm/virtual/".format(self.server))
+
+        # Send REST request and place response
+        resp = self.session.get(request_uri, verify=False)
+        if resp.status_code != 200:
+            print('GET {} returned {}'.format(resp.text, resp.status_code))
+
+        # Return response
+        return resp
+
+    def get_pool_info(self, pool):
+        # Set request uri
+        request_uri = (
+            "https://{}/mgmt/tm/ltm/pool/{}/".format(self.server,
+                                                     pool))
+        resp = self._get_info(request_uri)
+
+        # Return response
+        return resp
 
     def get_active_f5(self, site):
         pass
+
+    def get_pool_members(self, pool):
+        '''
+        Will get pool members
+        Depends:
+            get_info_json - returns json of pool members
+            _get_info - returns
+
+        Returns pool_members
+        '''
+        resp = None
+        pool = pool.replace('/', '~')
+
+        # Get the pool info
+        pool_info = self.get_pool_info(pool)
+        pool_info = pool_info.json()
+
+        if 'membersReference' in pool_info:
+            member_uri = pool_info['membersReference']['link'].split('/pool/')[1]
+            member_uri = member_uri.split('?')[0]
+            request_uri = (
+                "https://{}/mgmt/tm/ltm/pool/{}/".format(self.server,
+                                                         member_uri))
+
+            # Set request uri
+            resp = self._get_info(request_uri)
+
+        return resp
 
     def get_node_info(self, node):
         # Set total uri
@@ -138,7 +202,7 @@ class LTMUtils(F5):
             e = sys.exc_info()[0]
             pp.pprint(e)
 
-    def create_f5_object(self, obj_type, obj_info):
+    def create_f5_object(self, obj_type, obj_info, log_file):
         '''
         Will create F5 object
         Depends:
@@ -149,8 +213,12 @@ class LTMUtils(F5):
         :param obj_info:
             Required - should be dict with payload of F5 object
 
+        :param log_file:
+            Required - should be opened file that function can output to
+
         Returns none
         '''
+        s_log = open('/home/jspell/Documents/dev/success.log', 'a')
 
         # If valid begin putting together REST POST
         if obj_type in self.valid_objs:
@@ -158,12 +226,18 @@ class LTMUtils(F5):
             v = json.dumps(obj_info)
             try:
                 self.f5_connect()
-                create = self.session.put(f_uri, data=v, verify=False)
-                print(O + "{}".format(create.status_code) + W)
-                print(O + "{}".format(create.json()) + W)
+                create = self.session.post(f_uri, data=v, verify=False)
+                print(create.status_code)
+                if create.status_code is not 200:
+                    log_file.write(str(create.status_code) + " " +
+                                   str(create.content) + '\n')
+                else:
+                    s_log.write(str(create.status_code) + " " +
+                                str(create.content) + '\n')
+                    s_log.close()
             except:
                 e = sys.exc_info()[0]
-                print(R + "{}".format(e) + W)
+                print(R + "Except - {}".format(e) + W)
         else:
             print(R + "{}".format("Invalid object type...") + W)
 
@@ -226,3 +300,18 @@ class LTMUtils(F5):
         for member in j_active['items']:
             if member['failoverState'] == "active":
                 self.server = member['hostname']
+
+    def _get_info(self, request_uri):
+        # Set total uri
+        host_uri = "https://{}".format(self.server)  # host
+
+        # Determine connection state
+        if not self.f5con.active_connection():
+            self.f5_connect()
+
+        # Send REST request and place response
+        resp = self.session.get(request_uri, verify=False)
+        if resp.status_code != 200:
+            print('GET {} returned {}'.format(resp.text, resp.status_code))
+
+        return resp

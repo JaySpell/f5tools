@@ -1,7 +1,7 @@
 import json
 import sys
 sys.path.append('/home/jspell/Documents/dev/f5tools/')
-from f5 import F5
+from f5_custom import F5
 
 
 class GTMUtils(F5):
